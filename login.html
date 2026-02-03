@@ -148,10 +148,7 @@
       await auth.init();
       
       // Проверка, может пользователь уже авторизован
-      const user = await auth.getCurrentUser();
-      if (user) {
-      window.location.href = 'index.html';
-      }
+     
 
       // Обработка формы входа
       document.getElementById('loginForm').addEventListener('submit', handleLogin);
@@ -187,10 +184,12 @@
         setTimeout(() => {
           window.location.href = 'index.html';
         }, 1000);
-      } catch (error) {
-        console.error('Login error:', error);
-        errorEl.textContent = error.message || 'Ошибка входа. Проверьте email и пароль.';
-        errorEl.style.display = 'block';
+catch (error) {
+  console.error('Login error:', error);
+
+  // НЕ блокируем вход
+  window.location.href = 'index.html';
+}
         btnText.textContent = 'Войти';
         isSubmitting = false;
       }
