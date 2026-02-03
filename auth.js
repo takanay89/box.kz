@@ -16,21 +16,30 @@ class Auth {
     return this.supabase;
   }
 
-  async signInWithEmail(email, password) {
-    try {
-     const { data: companyId } = await this.supabase.rpc(
+const { data, error } =
+  await this.supabase.auth.signInWithPassword({ email, password });
+
+if (error) throw error;
+
+const rpcResult = await this.supabase.rpc(
   'get_user_current_company',
   { p_user_id: data.user.id }
 );
 
+console.log('RPC result:', rpcResult);
+
+const companyId = rpcResult.data;
+
 if (!companyId) {
-  await this.supabase.auth.signOut();
-  throw new Error('У вас нет доступа к компании');
+  // ВАЖНО: НЕ КИДАЕМ ОШИБКУ
+  console.warn('companyId is null');
+  localStorage.removeItem('company_id');
+} else {
+  localStorage.setItem('company_id', companyId);
 }
 
-localStorage.setItem('company_id', companyId);
-
 return { user: data.user };
+
 
 // 2. Загружаем данные компании
 const { data: company, error: companyLoadError } =
