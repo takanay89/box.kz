@@ -25,23 +25,24 @@ class Auth {
 
       if (error) throw error;
 
-      // Проверяем доступ к компании
-      const { data: companyUser } = await this.supabase
-        .from('company_users')
-        .select('*, companies(name)')
-        .eq('user_id', data.user.id)
-        .eq('company_id', CONFIG.COMPANY_ID)
-        .single();
+      const { data: companyId, error: companyError } = await this.supabase.rpc(
+        'get_user_current_company',
+        { p_user_id: data.user.id }
+      );
 
-      if (!companyUser) {
+      if (companyError) throw companyError;
+
+      if (!companyId) {
+        localStorage.removeItem('company_id');
         await this.supabase.auth.signOut();
-        throw new Error('У вас нет доступа к этой компании');
+        throw new Error('Компания не найдена');
       }
+
+      localStorage.setItem('company_id', companyId);
 
       return {
         user: data.user,
-        company: companyUser.companies,
-        role: companyUser.role
+        companyId
       };
     } catch (error) {
       console.error('Sign in error:', error);
@@ -88,25 +89,12 @@ class Auth {
       
       if (!user) return null;
 
-      // Получаем профиль
-      const { data: profile } = await this.supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      // Получаем роль в компании
-      const { data: companyUser } = await this.supabase
-        .from('company_users')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('company_id', CONFIG.COMPANY_ID)
-        .single();
+      const companyId = localStorage.getItem('company_id');
+      if (!companyId) return null;
 
       return {
         ...user,
-        profile,
-        role: companyUser?.role
+        companyId
       };
     } catch (error) {
       console.error('Get current user error:', error);
@@ -168,8 +156,11 @@ class Auth {
       const { data: userData } = await this.supabase.auth.getUser();
       if (!userData.user) throw new Error('Не авторизован');
 
+      const companyId = localStorage.getItem('company_id');
+      if (!companyId) throw new Error('Компания не выбрана');
+
       const { data: invitationId, error } = await this.supabase.rpc('invite_user', {
-        p_company_id: CONFIG.COMPANY_ID,
+        p_company_id: companyId,
         p_email: email.toLowerCase(),
         p_role: role,
         p_invited_by: userData.user.id

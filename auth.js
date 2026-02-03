@@ -6,7 +6,7 @@ class Auth {
   constructor() {
     this.supabase = null;
   }
- 
+
   async init() {
     if (typeof supabase === 'undefined') {
       throw new Error('Supabase library not loaded');
@@ -16,52 +16,34 @@ class Auth {
     return this.supabase;
   }
 
-const { data, error } =
-  await this.supabase.auth.signInWithPassword({ email, password });
+  async signInWithEmail(email, password) {
+    try {
+      const { data, error } = await this.supabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
-if (error) throw error;
+      if (error) throw error;
 
-const rpcResult = await this.supabase.rpc(
-  'get_user_current_company',
-  { p_user_id: data.user.id }
-);
+      const { data: companyId, error: companyError } = await this.supabase.rpc(
+        'get_user_current_company',
+        { p_user_id: data.user.id }
+      );
 
-console.log('RPC result:', rpcResult);
+      if (companyError) throw companyError;
 
-const companyId = rpcResult.data;
+      if (!companyId) {
+        localStorage.removeItem('company_id');
+        await this.supabase.auth.signOut();
+        throw new Error('Компания не найдена');
+      }
 
-if (!companyId) {
-  // ВАЖНО: НЕ КИДАЕМ ОШИБКУ
-  console.warn('companyId is null');
-  localStorage.removeItem('company_id');
-} else {
-  localStorage.setItem('company_id', companyId);
-}
+      localStorage.setItem('company_id', companyId);
 
-return { user: data.user };
-
-
-// 2. Загружаем данные компании
-const { data: company, error: companyLoadError } =
-  await this.supabase
-    .from('companies')
-    .select('*')
-    .eq('id', companyId)
-    .single();
-
-if (companyLoadError || !company) {
-  throw new Error('Компания не найдена');
-}
-
-// 3. Сохраняем company_id
-localStorage.setItem('company_id', companyId);
-
-return {
-  user: data.user,
-  company,
-  role: 'owner' // или потом подтянем роль отдельно
-};
-
+      return {
+        user: data.user,
+        companyId
+      };
     } catch (error) {
       console.error('Sign in error:', error);
       throw error;
@@ -107,29 +89,12 @@ return {
       
       if (!user) return null;
 
-      // Получаем профиль
-      const { data: profile } = await this.supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      // Получаем роль в компании
       const companyId = localStorage.getItem('company_id');
-if (!companyId) return null;
-
-const { data: companyUser } = await this.supabase
-  .from('company_users')
-  .select('role')
-  .eq('user_id', user.id)
-  .eq('company_id', companyId)
-  .eq('active', true)
-  .single();
+      if (!companyId) return null;
 
       return {
         ...user,
-        profile,
-        role: companyUser?.role
+        companyId
       };
     } catch (error) {
       console.error('Get current user error:', error);
@@ -191,8 +156,11 @@ const { data: companyUser } = await this.supabase
       const { data: userData } = await this.supabase.auth.getUser();
       if (!userData.user) throw new Error('Не авторизован');
 
+      const companyId = localStorage.getItem('company_id');
+      if (!companyId) throw new Error('Компания не выбрана');
+
       const { data: invitationId, error } = await this.supabase.rpc('invite_user', {
-        p_company_id: 
+        p_company_id: companyId,
         p_email: email.toLowerCase(),
         p_role: role,
         p_invited_by: userData.user.id

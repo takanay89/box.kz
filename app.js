@@ -12,6 +12,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     currentUser = await auth.checkAuth();
     
     if (!currentUser) return;
+
+    const companyId = currentUser.companyId || localStorage.getItem('company_id');
+    if (!companyId) {
+      window.location.href = '/login.html';
+      return;
+    }
     
     // Инициализация API
     await api.init();
