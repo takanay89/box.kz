@@ -1,0 +1,21 @@
+{
+  "name": "pos-kassir",
+  "version": "4.2.0",
+  "description": "POS система для малого бизнеса с Supabase",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx serve -p 3000",
+    "start": "npx serve -p 3000"
+  },
+  "keywords": [
+    "pos",
+    "retail",
+    "inventory",
+    "sales",
+    "supabase"
+  ],
+  "author": "takanay89@gmail.com",
+  "license": "PROPRIETARY",
+  "dependencies": {},
+  "devDependencies": {}
+}

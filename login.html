@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Вход - POS Kassir</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .login-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+      padding: 1rem;
+    }
+
+    .login-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 8px 24px var(--shadow);
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .login-logo {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .login-subtitle {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+
+    .login-form {
+      margin-bottom: 1.5rem;
+    }
+
+    .error-message {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      padding: 0.75rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+    }
+
+    .success-message {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid var(--success);
+      color: var(--success);
+      padding: 0.75rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+    }
+
+    .login-footer {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .login-footer a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .login-footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-logo">POS Kassir</div>
+        <div class="login-subtitle">Войдите в свой аккаунт</div>
+      </div>
+
+      <div id="errorMessage" class="error-message" style="display: none;"></div>
+      <div id="successMessage" class="success-message" style="display: none;"></div>
+
+      <form id="loginForm" class="login-form">
+        <div class="form-group">
+          <label class="form-label" for="email">Email</label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            class="form-input" 
+            required 
+            autocomplete="email"
+            placeholder="example@email.com"
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Пароль</label>
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            class="form-input" 
+            required 
+            autocomplete="current-password"
+            placeholder="••••••••"
+          >
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">
+          <span id="loginButtonText">Войти</span>
+        </button>
+      </form>
+
+      <div class="login-footer">
+        <p>Забыли пароль? <a href="#" id="resetPasswordLink">Восстановить</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- Our modules -->
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+
+  <script>
+    let isSubmitting = false;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await auth.init();
+      
+      // Проверка, может пользователь уже авторизован
+      const user = await auth.getCurrentUser();
+      if (user) {
+        window.location.href = '/index.html';
+      }
+
+      // Обработка формы входа
+      document.getElementById('loginForm').addEventListener('submit', handleLogin);
+      
+      // Обработка восстановления пароля
+      document.getElementById('resetPasswordLink').addEventListener('click', handleResetPassword);
+    });
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      
+      if (isSubmitting) return;
+      isSubmitting = true;
+
+      const errorEl = document.getElementById('errorMessage');
+      const successEl = document.getElementById('successMessage');
+      const btnText = document.getElementById('loginButtonText');
+      
+      errorEl.style.display = 'none';
+      successEl.style.display = 'none';
+      btnText.textContent = 'Вход...';
+
+      const formData = new FormData(e.target);
+      const email = formData.get('email');
+      const password = formData.get('password');
+
+      try {
+        const result = await auth.signInWithEmail(email, password);
+        
+        successEl.textContent = 'Успешный вход! Перенаправление...';
+        successEl.style.display = 'block';
+        
+        setTimeout(() => {
+          window.location.href = '/index.html';
+        }, 1000);
+      } catch (error) {
+        console.error('Login error:', error);
+        errorEl.textContent = error.message || 'Ошибка входа. Проверьте email и пароль.';
+        errorEl.style.display = 'block';
+        btnText.textContent = 'Войти';
+        isSubmitting = false;
+      }
+    }
+
+    async function handleResetPassword(e) {
+      e.preventDefault();
+      
+      const email = document.getElementById('email').value;
+      
+      if (!email) {
+        alert('Пожалуйста, введите email');
+        return;
+      }
+
+      try {
+        const result = await auth.resetPassword(email);
+        
+        const successEl = document.getElementById('successMessage');
+        successEl.textContent = result.message;
+        successEl.style.display = 'block';
+        
+        setTimeout(() => {
+          successEl.style.display = 'none';
+        }, 5000);
+      } catch (error) {
+        console.error('Reset password error:', error);
+        const errorEl = document.getElementById('errorMessage');
+        errorEl.textContent = 'Ошибка восстановления пароля: ' + error.message;
+        errorEl.style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>

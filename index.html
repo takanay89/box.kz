@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POS Kassir</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="app-logo">POS Kassir</div>
+      
+      <div class="header-controls">
+        <select class="store-selector" id="storeSelector">
+          <option value="">Торговая точка: Основная</option>
+        </select>
+        
+        <div class="user-menu" onclick="toggleUserMenu()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-width="2"/>
+            <circle cx="12" cy="7" r="4" stroke-width="2"/>
+          </svg>
+          <span id="userName">Пользователь</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="app-main">
+      <!-- Sidebar -->
+      <aside class="app-sidebar" id="sidebar">
+        <ul class="nav-menu">
+          <li class="nav-item">
+            <a href="#" class="nav-link active" data-section="trading" onclick="changeSection('trading')">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <circle cx="9" cy="21" r="1" stroke-width="2"/>
+                <circle cx="20" cy="21" r="1" stroke-width="2"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" stroke-width="2"/>
+              </svg>
+              Торговля
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" data-section="products" onclick="changeSection('products')">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" stroke-width="2"/>
+              </svg>
+              Товары
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" data-section="suppliers" onclick="changeSection('suppliers')">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="2"/>
+                <circle cx="9" cy="7" r="4" stroke-width="2"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke-width="2"/>
+              </svg>
+              Поставщики
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" data-section="customers" onclick="changeSection('customers')">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="2"/>
+                <circle cx="9" cy="7" r="4" stroke-width="2"/>
+              </svg>
+              Клиенты
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" data-section="expenses" onclick="changeSection('expenses')">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-width="2"/>
+              </svg>
+              Расходы
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" data-section="money" onclick="changeSection('money')">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2" stroke-width="2"/>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" stroke-width="2"/>
+              </svg>
+              Деньги
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" data-section="reports" onclick="changeSection('reports')">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M3 3v18h18" stroke-width="2"/>
+                <path d="M18 17l-5-5-4 4-5-5" stroke-width="2"/>
+              </svg>
+              Отчёты
+            </a>
+          </li>
+        </ul>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="app-content" id="mainContent">
+        <!-- Content will be dynamically loaded here -->
+      </main>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast"></div>
+
+  <!-- Modals will be added dynamically -->
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- SheetJS for Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  
+  <!-- Our modules -->
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/sales.js"></script>
+  <script src="js/products.js"></script>
+  <script src="js/entities.js"></script>
+  <script src="js/reports.js"></script>
+  
+  <!-- Main App -->
+  <script src="js/app.js"></script>
+</body>
+</html>
