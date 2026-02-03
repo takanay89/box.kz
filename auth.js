@@ -6,7 +6,7 @@ class Auth {
   constructor() {
     this.supabase = null;
   }
-
+ 
   async init() {
     if (typeof supabase === 'undefined') {
       throw new Error('Supabase library not loaded');
