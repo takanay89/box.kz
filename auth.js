@@ -18,24 +18,19 @@ class Auth {
 
   async signInWithEmail(email, password) {
     try {
-      const { data, error } = await this.supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+     const { data: companyId } = await this.supabase.rpc(
+  'get_user_current_company',
+  { p_user_id: data.user.id }
+);
 
-      if (error) throw error;
-
-     // 1. Получаем компанию через RPC (ИСТИНА)
-const { data: companyId, error: companyError } =
-  await this.supabase.rpc(
-    'get_user_current_company',
-    { p_user_id: data.user.id }
-  );
-
-if (companyError || !companyId) {
+if (!companyId) {
   await this.supabase.auth.signOut();
   throw new Error('У вас нет доступа к компании');
 }
+
+localStorage.setItem('company_id', companyId);
+
+return { user: data.user };
 
 // 2. Загружаем данные компании
 const { data: company, error: companyLoadError } =
@@ -111,12 +106,16 @@ return {
         .single();
 
       // Получаем роль в компании
-      const { data: companyUser } = await this.supabase
-        .from('company_users')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('company_id', CONFIG.COMPANY_ID)
-        .single();
+      const companyId = localStorage.getItem('company_id');
+if (!companyId) return null;
+
+const { data: companyUser } = await this.supabase
+  .from('company_users')
+  .select('role')
+  .eq('user_id', user.id)
+  .eq('company_id', companyId)
+  .eq('active', true)
+  .single();
 
       return {
         ...user,
@@ -184,7 +183,7 @@ return {
       if (!userData.user) throw new Error('Не авторизован');
 
       const { data: invitationId, error } = await this.supabase.rpc('invite_user', {
-        p_company_id: CONFIG.COMPANY_ID,
+        p_company_id: 
         p_email: email.toLowerCase(),
         p_role: role,
         p_invited_by: userData.user.id
