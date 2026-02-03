@@ -158,38 +158,41 @@
     });
 
     async function handleLogin(e) {
-      e.preventDefault();
-      
-      if (isSubmitting) return;
-      isSubmitting = true;
+  e.preventDefault();
 
-      const errorEl = document.getElementById('errorMessage');
-      const successEl = document.getElementById('successMessage');
-      const btnText = document.getElementById('loginButtonText');
-      
-      errorEl.style.display = 'none';
-      successEl.style.display = 'none';
-      btnText.textContent = 'Вход...';
+  if (isSubmitting) return;
+  isSubmitting = true;
 
-      const formData = new FormData(e.target);
-      const email = formData.get('email');
-      const password = formData.get('password');
+  const errorEl = document.getElementById('errorMessage');
+  const successEl = document.getElementById('successMessage');
+  const btnText = document.getElementById('loginButtonText');
 
-      try {
-        const result = await auth.signInWithEmail(email, password);
-        
-        successEl.textContent = 'Успешный вход! Перенаправление...';
-        successEl.style.display = 'block';
-        
-        setTimeout(() => {
-          window.location.href = 'index.html';
-        }, 1000);
-catch (error) {
-  console.error('Login error:', error);
+  errorEl.style.display = 'none';
+  successEl.style.display = 'none';
+  btnText.textContent = 'Вход...';
 
-  // НЕ блокируем вход
-  window.location.href = 'index.html';
+  const formData = new FormData(e.target);
+  const email = formData.get('email');
+  const password = formData.get('password');
+
+  try {
+    await auth.signInWithEmail(email, password);
+
+    successEl.textContent = 'Успешный вход! Перенаправление...';
+    successEl.style.display = 'block';
+
+    setTimeout(() => {
+      window.location.href = 'index.html';
+    }, 500);
+
+  } catch (error) {
+    console.error('Login error:', error);
+
+    // временно всё равно пускаем
+    window.location.href = 'index.html';
+  }
 }
+
         btnText.textContent = 'Войти';
         isSubmitting = false;
       }
