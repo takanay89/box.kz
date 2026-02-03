@@ -25,24 +25,39 @@ class Auth {
 
       if (error) throw error;
 
-      // Проверяем доступ к компании
-      const { data: companyUser } = await this.supabase
-        .from('company_users')
-        .select('*, companies(name)')
-        .eq('user_id', data.user.id)
-        .eq('company_id', CONFIG.COMPANY_ID)
-        .single();
+     // 1. Получаем компанию через RPC (ИСТИНА)
+const { data: companyId, error: companyError } =
+  await this.supabase.rpc(
+    'get_user_current_company',
+    { p_user_id: data.user.id }
+  );
 
-      if (!companyUser) {
-        await this.supabase.auth.signOut();
-        throw new Error('У вас нет доступа к этой компании');
-      }
+if (companyError || !companyId) {
+  await this.supabase.auth.signOut();
+  throw new Error('У вас нет доступа к компании');
+}
 
-      return {
-        user: data.user,
-        company: companyUser.companies,
-        role: companyUser.role
-      };
+// 2. Загружаем данные компании
+const { data: company, error: companyLoadError } =
+  await this.supabase
+    .from('companies')
+    .select('*')
+    .eq('id', companyId)
+    .single();
+
+if (companyLoadError || !company) {
+  throw new Error('Компания не найдена');
+}
+
+// 3. Сохраняем company_id
+localStorage.setItem('company_id', companyId);
+
+return {
+  user: data.user,
+  company,
+  role: 'owner' // или потом подтянем роль отдельно
+};
+
     } catch (error) {
       console.error('Sign in error:', error);
       throw error;
